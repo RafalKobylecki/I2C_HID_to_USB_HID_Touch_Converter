@@ -125,8 +125,12 @@ void setup()
   Serial1.println("Touchscreen tester V.1.1.0");
   i2c_scanner_m(Wire, _i2c_address_array, 128);
   i2c_scanner_print_data(_i2c_address_array, 128);
-
+  // CHANGE: 2026-10-15
+  Wire.begin();
+  Wire.setClock(400000);
+  // END CHANGE
   TP_Detect();
+
   Serial1.println("DETECT");
   if (addr < 16)
     Serial1.print("ADDRESS: 0x0");
@@ -174,11 +178,12 @@ void loop()
   {
     ReadTouchscreen_4B();
   } // FAROE
-  if (addr == 0x40)
-  {
-    ReadTouchscreen_G7500();
-  }
-
+  // CHANGE : 2024-07-05 15:10:45 REMOVED: 2024-07-05 15:10:45
+  // if (addr == 0x40)
+  // {
+  //   ReadTouchscreen_G7500();
+  // }
+// END CHANGE
   if (addr == 0x10)
   {
     if (platform == eKTH5018)
@@ -248,9 +253,13 @@ void loop()
 
 void TP_Detect()
 {
-
   uint8_t i = 0;
   //*************************************************                           FAROE                         *************************************************
+  
+  // CHANGE: 2026-10-15
+  memset(c, 0, sizeof(c));
+  // END CHANGE
+  
   Wire.requestFrom(0x4B, 3);
   while (Wire.available())
   {
@@ -263,6 +272,9 @@ void TP_Detect()
 
   //*************************************************                        LXSEMICON                        *************************************************
   i = 0;
+  // CHANGE: 2026-10-15
+  memset(c, 0, sizeof(c));
+  // END CHANGE
   Wire.beginTransmission(0x09);
   Wire.write(0x01);
   Wire.write(0x00);
@@ -287,6 +299,9 @@ void TP_Detect()
   }
    //**************************************************************************************************************
   i = 0;
+  // CHANGE: 2026-10-15
+  memset(c, 0, sizeof(c));
+  // END CHANGE
   Wire.beginTransmission(0x34);
   Wire.write(00);
   Wire.write(00);
@@ -297,7 +312,7 @@ void TP_Detect()
   c[i] = Wire.read();
   i++;
  }
-if (data[20] == 0xD2 and data[21] == 0x1F and data[22] == 0x05 and data[23] == 0xB0)
+if (c[20] == 0xD2 and c[21] == 0x1F and c[22] == 0x05 and c[23] == 0xB0)
  {
   addr = 0x34;
 #ifdef DEBUG_IN
@@ -309,7 +324,7 @@ if (data[20] == 0xD2 and data[21] == 0x1F and data[22] == 0x05 and data[23] == 0
   multi_x = 80;
   multi_y = 79;
 }
-if (data[20] == 0xD2 and data[21] == 0x1F and data[22] == 0x06 and data[23] == 0x90)
+if (c[20] == 0xD2 and c[21] == 0x1F and c[22] == 0x06 and c[23] == 0x90)
 {
   addr = 0x34;
 #ifdef DEBUG_IN
@@ -321,7 +336,7 @@ if (data[20] == 0xD2 and data[21] == 0x1F and data[22] == 0x06 and data[23] == 0
   multi_x = 80;
   multi_y = 80;
 }
-if (data[20] == 0xD2 and data[21] == 0x1F and data[22] == 0x11 and data[23] == 0xB0)
+if (c[20] == 0xD2 and c[21] == 0x1F and c[22] == 0x11 and c[23] == 0xB0)
 {
     addr = 0x34;
 #ifdef DEBUG_IN
@@ -372,8 +387,11 @@ if (data[20] == 0xD2 and data[21] == 0x1F and data[22] == 0x11 and data[23] == 0
   //   Serial1.println("");
 
   //*************************************************   0x0A RAMIA / BUMBLEBEE / ZIG-ZAG / BERLINETTA CFL-R   *************************************************
-
+  
   i = 0;
+  // CHANGE: 2026-10-15
+  memset(c, 0, sizeof(c));
+  // END CHANGE
   Wire.beginTransmission(0x0A);
   Wire.write(0x00);
   Wire.write(0x00);
@@ -500,6 +518,9 @@ if (data[20] == 0xD2 and data[21] == 0x1F and data[22] == 0x11 and data[23] == 0
 
   //*************************************************                 0x10 FIORANO / MockingBird                  *************************************************
   i = 0;
+  // CHANGE: 2026-10-15
+  memset(c, 0, sizeof(c));
+  // END CHANGE
   bool lxSemiconFound = false;
   // check if LX SEMICON HID ADDR 0x00
   Wire.beginTransmission(0x10);
@@ -535,7 +556,12 @@ if (data[20] == 0xD2 and data[21] == 0x1F and data[22] == 0x11 and data[23] == 0
   Wire.write(01);
   Wire.write(00);
   Wire.endTransmission(false);
-
+  // CHANGE: 2026-10-15
+  i=0;
+  // CHANGE: 2026-10-15
+  memset(c, 0, sizeof(c));
+  // END CHANGE
+  // END CHANGE
   Wire.requestFrom(0x10, 30);
   while (Wire.available())
   {
@@ -1057,12 +1083,14 @@ void ReadTouchscreen_4B()
     TouchscreenUSB.press(c[4], ((c[6] * 256) + c[5]) * 8, ((c[10] * 256) + c[9]) * 8);
     finger[c[4]] = 1;
   }
-  else if (c[3] == 1 and c[19] >> 1)
+  else if (c[3] == 1 && c[19] > 1)
   {
     TouchscreenUSB.press(c[4], ((c[6] * 256) + c[5]) * 8, ((c[10] * 256) + c[9]) * 8);
     finger[c[4]] = 1;
     val = c[19];
-    for (i = 2; i = val; i++)
+    // CHANGE 2026-10-15
+    for (int index = 2; index < val; index++) // być może do zmiany::  for (int index = 2; index <= val; index++) 
+    // END CHANGE
     {
       delay(5);
 
@@ -1084,8 +1112,8 @@ void ReadTouchscreen_4B()
   {
     for (int index = 0; index < 10; index++)
     {
-      TouchscreenUSB.release(i);
-      finger[i] = 0;
+      TouchscreenUSB.release(index);
+      finger[index] = 0;
     }
   }
   else if (c[19] != 0)
@@ -1512,8 +1540,10 @@ void Read_TS_Wacom_G14()
     index++;
     frames = 1;
   }
-  if (data[0] == 0x15 && data[1] == 0x00 && data[2] == 0x1C)
-    finger_cnt = data[4];
+  if (data_m[0][0] == 0x15 && data_m[0][1] == 0x00 && data_m[0][2] == 0x1C){
+    finger_cnt = data_m[0][4];
+  }
+
   if (finger_cnt > 2)
   {
     index = 0;
@@ -1574,11 +1604,13 @@ void Read_TS_Wacom_G14()
     else
       TouchscreenUSB.release((2 * i) + 2);
   }
-  for (uint8_t i = frames; i < 10; i++)
+  // CHANGE 2026-10-15
+  for (uint8_t i = frames; i < 5; i++)
   {
     TouchscreenUSB.release((2 * i) + 1);
     TouchscreenUSB.release((2 * i) + 2);
   }
+  // END CHANGE
   delayMicroseconds(8050);
 }
 
@@ -1690,7 +1722,7 @@ void ReadTouchscreen_10()
           // TouchscreenUSB.press((c[i] - 7) / 4, ((c[i + 4] * 256) + c[i + 3]) * 9.2, ((c[i + 8] * 256) + c[i + 7]) * 15.8);
           TouchscreenUSB.press((c[i] - 7) / 4, ((((c[i + 4] * 256) + c[i + 3]) * multi_x) / 10), (((c[i + 8] * 256) + c[i + 7]) * multi_y) / 10);
         }
-        else // if (c[i] == 4 or c[i] == 8 or c[i] == 12 or c[i] == 16 or c[i] == 20 or c[i] == 24 or c[i] == 28 or c[i] == 32 or c[i] == 36 or c[i] == 40)
+        else // AKCEPTUJE BEZ ZMIAN: if (c[i] == 4 or c[i] == 8 or c[i] == 12 or c[i] == 16 or c[i] == 20 or c[i] == 24 or c[i] == 28 or c[i] == 32 or c[i] == 36 or c[i] == 40)
         {
           TouchscreenUSB.release((c[i] - 4) / 4);
         }
@@ -1918,15 +1950,15 @@ void ReadTouchscreen_Southpeak_13_TGL()
     ReadTouchscreenXXX(0x0A, data, 24, 96);
   }
 
-  for (int index = 0; index < fingers; i++)
+  for (int index = 0; index < fingers; index++)
   {
-    if ((data[6 + (i * 7)]) % 2 == 0)
+    if ((data[6 + (index * 7)]) % 2 == 0)
     {
-      TouchscreenUSB.press(i, ((data[17 + (i * 7)] * 256) + c[16 + (i * 7)]) * mult_x, ((c[19 + (i * 7)] * 256) + c[18 + (i * 7)]) * mult_y);
+      TouchscreenUSB.press(index, ((data[17 + (index * 7)] * 256) + data[16 + (index * 7)]) * mult_x, ((data[19 + (index * 7)] * 256) + data[18 + (index * 7)]) * mult_y);
     }
     else
     {
-      TouchscreenUSB.press(i, ((data[9 + (i * 7)] * 256) + c[8 + (i * 7)]) * mult_x, ((c[12 + (i * 7)] * 256) + c[11 + (i * 7)]) * mult_y);
+      TouchscreenUSB.press(index, ((data[9 + (index * 7)] * 256) + data[8 + (index * 7)]) * mult_x, ((data[12 + (index * 7)] * 256) + data[11 + (index * 7)]) * mult_y);
     }
   }
 
@@ -2347,7 +2379,7 @@ void ReadTouchscreen_LXSemicon_SW42101A(){
     {
       TouchscreenUSB.release(i);
     }
-  }else if(data[0]==0x42 && data[63]!=0x00){
+  }else if(data[0]==0x42 && data[64]!=0x00){  //CHANGE 2026-10-15 before if(data[0]==0x42 && data[63]!=0x00)
       fingers = data[64];
     for (int z = 0; z < fingers; z++)
     {
