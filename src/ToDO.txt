@@ -1,0 +1,4 @@
+podziellic plik main na biblioteki do obsługi poszczególnych sterowników TS Elan/Wacom/Melfas itp.
+dodać funckję sprawdzającą adresy urządzenia na I2C
+podzielic funkcję TP_Detect() na części, wywoływać odpowiednią funkcję w zaleźności od adresu SLA 
+sprawdzanie co 1sec czy touchscreen podłączony
